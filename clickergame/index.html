@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Customizable Clicker Game</title>
+<style>
+       /* === Customizable Variables === */
+       :root {
+           --bg-gradient-start: #1e3c72;
+           --bg-gradient-end: #2a5298;
+           --button-gradient-start: #4facfe;
+           --button-gradient-end: #00f2fe;
+           --button-hover-color: #ffffff;
+           --score-color: #00ffff;
+           --timer-color: #00ffdd;
+           --cps-color: #00ff99;
+           --font-family: 'Segoe UI', Arial, sans-serif;
+       }
+       body {
+           font-family: var(--font-family);
+           margin: 0;
+           padding: 0;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           height: 100vh;
+           background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+           background-size: 400% 400%;
+           animation: gradientShift 10s ease infinite;
+       }
+       @keyframes gradientShift {
+           0% { background-position: 0% 50%; }
+           50% { background-position: 100% 50%; }
+           100% { background-position: 0% 50%; }
+       }
+       #game-container {
+           background: rgba(0, 0, 50, 0.8);
+           padding: 40px 60px;
+           border-radius: 20px;
+           text-align: center;
+           box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+           color: #fff;
+           position: relative;
+       }
+       h1 {
+           font-size: 48px;
+           margin-bottom: 20px;
+           text-shadow: 2px 2px #000;
+       }
+       button {
+           font-size: 28px;
+           padding: 20px 40px;
+           margin: 10px;
+           border: none;
+           border-radius: 15px;
+           cursor: pointer;
+           background: linear-gradient(45deg, var(--button-gradient-start), var(--button-gradient-end));
+           color: #fff;
+           transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+           box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+       }
+       button:hover {
+           transform: scale(1.1);
+           filter: brightness(1.2);
+           box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+       }
+       #score, #timer, #cps {
+           font-size: 32px;
+           margin: 15px 0;
+           text-shadow: 1px 1px #000;
+       }
+       #score { color: var(--score-color); }
+       #timer { color: var(--timer-color); animation: pulse 1s infinite; }
+       #cps { color: var(--cps-color); animation: pulse 0.8s infinite; }
+       @keyframes pulse {
+           0% { text-shadow: 0 0 5px #fff; }
+           50% { text-shadow: 0 0 20px #fff; }
+           100% { text-shadow: 0 0 5px #fff; }
+       }
+       /* Settings Panel */
+       #settings {
+           position: absolute;
+           top: 10px;
+           right: 10px;
+           background: rgba(0,0,0,0.8);
+           padding: 15px;
+           border-radius: 10px;
+           width: 250px;
+           display: none;
+       }
+       #settings label, #settings select, #settings input {
+           display: block;
+           margin: 10px 0;
+       }
+       #settings-toggle {
+           position: absolute;
+           top: 10px;
+           left: 10px;
+           font-size: 16px;
+           padding: 5px 10px;
+           cursor: pointer;
+       }
+</style>
+</head>
+<body>
+<div id="game-container">
+<button id="settings-toggle">Settings ⚙️</button>
+<div id="settings">
+<label for="soundSelect">Click Sound:</label>
+<select id="soundSelect">
+<option value="https://www.soundjay.com/button/sounds/button-16.mp3">Sound 1</option>
+<option value="https://www.soundjay.com/button/sounds/button-09.mp3">Sound 2</option>
+<option value="https://www.soundjay.com/button/sounds/button-10.mp3">Sound 3</option>
+</select>
+<label for="bgColor">Background Gradient Start:</label>
+<input type="color" id="bgColor" value="#1e3c72">
+<label for="buttonColorStart">Button Gradient Start:</label>
+<input type="color" id="buttonColorStart" value="#4facfe">
+<label for="buttonColorEnd">Button Gradient End:</label>
+<input type="color" id="buttonColorEnd" value="#00f2fe">
+<label for="fontSelect">Font:</label>
+<select id="fontSelect">
+<option value="'Segoe UI', Arial, sans-serif">Segoe UI</option>
+<option value="Verdana, Geneva, sans-serif">Verdana</option>
+<option value="Courier New, monospace">Courier New</option>
+<option value="Georgia, serif">Georgia</option>
+</select>
+</div>
+<h1>Clicker Game</h1>
+<div id="game-buttons">
+<button id="clickBtn">Click Me!</button>
+<button id="resetBtn">Reset</button>
+</div>
+<div id="score">Score: 0</div>
+<div id="timer">Time: 0.000 s</div>
+<div id="cps">CPS: 0.00</div>
+</div>
+<audio id="clickSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+<script>
+let score = 0;
+let startTime = null;
+let lastUpdateTime = null;
+let cps = 0;
+let clicksThisSecond = 0;
+let timerInterval = null;
+const clickBtn = document.getElementById("clickBtn");
+const resetBtn = document.getElementById("resetBtn");
+const scoreDisplay = document.getElementById("score");
+const timerDisplay = document.getElementById("timer");
+const cpsDisplay = document.getElementById("cps");
+const clickSound = document.getElementById("clickSound");
+const settingsToggle = document.getElementById("settings-toggle");
+const settingsPanel = document.getElementById("settings");
+const soundSelect = document.getElementById("soundSelect");
+const bgColor = document.getElementById("bgColor");
+const buttonColorStart = document.getElementById("buttonColorStart");
+const buttonColorEnd = document.getElementById("buttonColorEnd");
+const fontSelect = document.getElementById("fontSelect");
+// Function to handle clicks/keypresses
+function increaseScore() {
+   score++;
+   clicksThisSecond++;
+   scoreDisplay.innerText = "Score: " + score;
+   clickSound.play();
+   if (!startTime) {
+       startTime = performance.now();
+       lastUpdateTime = startTime;
+       timerInterval = setInterval(updateTime, 50);
+   }
+}
+// Update timer and CPS
+function updateTime() {
+   const now = performance.now();
+   const elapsed = (now - startTime) / 1000;
+   timerDisplay.innerText = `Time: ${elapsed.toFixed(3)} s`;
+   if (now - lastUpdateTime >= 1000) {
+       cps = clicksThisSecond / ((now - lastUpdateTime)/1000);
+       cpsDisplay.innerText = `CPS: ${cps.toFixed(2)}`;
+       clicksThisSecond = 0;
+       lastUpdateTime = now;
+   }
+}
+// Reset game
+function resetGame() {
+   if (confirm("Are you sure you want to reset the score and timer?")) {
+       score = 0;
+       startTime = null;
+       lastUpdateTime = null;
+       cps = 0;
+       clicksThisSecond = 0;
+       scoreDisplay.innerText = "Score: 0";
+       timerDisplay.innerText = "Time: 0.000 s";
+       cpsDisplay.innerText = "CPS: 0.00";
+       clearInterval(timerInterval);
+   }
+}
+// Settings toggle
+settingsToggle.onclick = () => {
+   settingsPanel.style.display = settingsPanel.style.display === "block" ? "none" : "block";
+};
+// Settings changes
+soundSelect.onchange = () => { clickSound.src = soundSelect.value; };
+bgColor.oninput = () => { document.body.style.background = `linear-gradient(135deg, ${bgColor.value}, var(--bg-gradient-end))`; };
+buttonColorStart.oninput = () => { document.querySelectorAll("button").forEach(b => b.style.background = `linear-gradient(45deg, ${buttonColorStart.value}, ${buttonColorEnd.value})`); };
+buttonColorEnd.oninput = () => { document.querySelectorAll("button").forEach(b => b.style.background = `linear-gradient(45deg, ${buttonColorStart.value}, ${buttonColorEnd.value})`); };
+fontSelect.onchange = () => { document.body.style.fontFamily = fontSelect.value; };
+// Event listeners
+clickBtn.onclick = increaseScore;
+document.addEventListener("keydown", increaseScore);
+resetBtn.onclick = resetGame;
+</script>
+</body>
+</html>

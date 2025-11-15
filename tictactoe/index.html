@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fancy Tic-Tac-Toe</title>
+<style>
+body {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    font-family:'Arial',sans-serif;
+    background: linear-gradient(135deg,#89f7fe,#66a6ff);
+    margin:0;
+    padding:20px;
+}
+h1 { margin-bottom:10px; color:#fff; text-shadow: 2px 2px 5px rgba(0,0,0,0.3);}
+.board {
+    display:grid;
+    grid-template-columns:repeat(3,100px);
+    grid-gap:10px;
+    background: rgba(255,255,255,0.2);
+    padding:10px;
+    border-radius:16px;
+    box-shadow:0 0 20px rgba(0,0,0,0.2);
+}
+.cell {
+    width:100px;
+    height:100px;
+    background:rgba(255,255,255,0.9);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:48px;
+    cursor:pointer;
+    border-radius:12px;
+    user-select:none;
+    transition: transform 0.2s, background 0.2s;
+}
+.cell:hover { transform: scale(1.1); background:#d0e1f9; }
+.cell.pop { animation: pop 0.3s ease forwards; }
+@keyframes pop { 0%{transform:scale(0.1);opacity:0;} 100%{transform:scale(1);opacity:1;} }
+
+.status { margin:10px; font-weight:bold; font-size:18px; color:#fff; text-shadow:1px 1px 2px rgba(0,0,0,0.4);}
+button { padding:8px 14px; font-size:16px; cursor:pointer; border-radius:8px; margin-top:8px; background:#fff; box-shadow:0 0 5px rgba(0,0,0,0.2);}
+#scoreboard { margin-top:12px; font-size:16px; color:#fff; text-shadow:1px 1px 2px rgba(0,0,0,0.3);}
+#scoreboard span.win-highlight { animation: pulse 0.5s ease; }
+@keyframes pulse { 0%{transform:scale(1);color:#fff;} 50%{transform:scale(1.4);color:#ffeb3b;} 100%{transform:scale(1);color:#fff;} }
+
+@media(max-width:520px){
+    .board { grid-template-columns:repeat(3,70px); grid-gap:5px; padding:5px; }
+    .cell { width:70px; height:70px; font-size:32px; }
+}
+</style>
+</head>
+<body>
+
+<h1>Fancy Tic-Tac-Toe</h1>
+
+<div class="status" id="status">X to move</div>
+<div class="board" id="board"></div>
+
+<div style="margin-top:10px">
+    <label style="color:#fff;">AI Difficulty:</label>
+    <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium" selected>Medium</option>
+        <option value="hard">Hard</option>
+    </select>
+</div>
+
+<button id="restart">Restart</button>
+
+<div id="scoreboard">
+Wins: <span id="winsX">0</span> | Draws: <span id="draws">0</span> | Losses: <span id="winsO">0</span>
+</div>
+
+<audio id="moveSound"><source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" type="audio/ogg"></audio>
+<audio id="winSound"><source src="https://actions.google.com/sounds/v1/cartoon/clang.ogg" type="audio/ogg"></audio>
+<audio id="drawSound"><source src="https://actions.google.com/sounds/v1/cartoon/slide_whistle_to_drum_hit.ogg" type="audio/ogg"></audio>
+
+<script>
+// ====== INITIALIZATION ======
+const boardEl = document.getElementById('board');
+const statusEl = document.getElementById('status');
+const restartBtn = document.getElementById('restart');
+const difficultyEl = document.getElementById('difficulty');
+const winsXEl = document.getElementById('winsX');
+const winsOEl = document.getElementById('winsO');
+const drawsEl = document.getElementById('draws');
+
+const moveSound = document.getElementById('moveSound');
+const winSound = document.getElementById('winSound');
+const drawSound = document.getElementById('drawSound');
+
+let cells=[], turn='X', gameOver=false;
+let score={X:0, O:0, draws:0};
+
+// Persistent score
+if(localStorage.getItem('ticScore')){
+    score = JSON.parse(localStorage.getItem('ticScore'));
+    updateScoreboard();
+}
+
+// ====== SCOREBOARD ======
+function updateScoreboard(){
+    winsXEl.textContent = score.X;
+    winsOEl.textContent = score.O;
+    drawsEl.textContent = score.draws;
+}
+
+// ====== START GAME ======
+function startGame(){
+    cells = Array(9).fill('');
+    turn = 'X';
+    gameOver = false;
+    statusEl.textContent = 'X to move';
+    boardEl.innerHTML = '';
+    for(let i=0;i<9;i++){
+        const c = document.createElement('div');
+        c.className='cell';
+        c.dataset.i=i;
+        c.addEventListener('click',()=>playerMove(i));
+        boardEl.appendChild(c);
+    }
+}
+
+// ====== PLAYER MOVE ======
+function playerMove(i){
+    if(gameOver || cells[i]) return;
+    makeMove(i, turn);
+    if(!gameOver && turn==='O') setTimeout(aiMove, 400);
+}
+
+// ====== MAKE MOVE WITH ANIMATION ======
+function makeMove(i, player){
+    cells[i] = player;
+    const cellEl = boardEl.children[i];
+    cellEl.textContent = player;
+    cellEl.classList.add('pop');
+    setTimeout(()=>cellEl.classList.remove('pop'),300);
+    moveSound.play();
+
+    const winner = checkWin();
+    if(winner){
+        gameOver = true;
+        if(winner==='draw'){
+            statusEl.textContent = "It's a draw!";
+            score.draws++;
+            drawSound.play();
+        } else {
+            statusEl.textContent = winner + " wins!";
+            score[winner]++;
+            winSound.play();
+            highlightWinningCells(winner);
+            highlightScore(winner);
+        }
+        localStorage.setItem('ticScore', JSON.stringify(score));
+        updateScoreboard();
+        return;
+    }
+
+    turn = turn==='X'?'O':'X';
+    statusEl.textContent = turn + " to move";
+}
+
+// ====== HIGHLIGHT WINNING CELLS ======
+function highlightWinningCells(winner){
+    const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    for(const w of wins){
+        const [i1,i2,i3] = w;
+        if(cells[i1]===winner && cells[i2]===winner && cells[i3]===winner){
+            [i1,i2,i3].forEach(idx=>{
+                boardEl.children[idx].style.background='yellow';
+            });
+            break;
+        }
+    }
+}
+
+// ====== HIGHLIGHT SCORE ======
+function highlightScore(player){
+    const el = player==='X'?winsXEl:winsOEl;
+    el.classList.add('win-highlight');
+    setTimeout(()=>el.classList.remove('win-highlight'),500);
+}
+
+// ====== AI ======
+function aiMove(){
+    if(gameOver) return;
+    let i;
+    const diff = difficultyEl.value;
+    if(diff==='easy'){
+        const free = cells.map((v,i)=>v===''?i:null).filter(v=>v!==null);
+        i = free[Math.floor(Math.random()*free.length)];
+    } else if(diff==='medium'){
+        i = mediumAI();
+    } else {
+        i = minimaxAI();
+    }
+    makeMove(i,'O');
+}
+
+function mediumAI(){
+    for(let i=0;i<9;i++){ if(cells[i]===''){ cells[i]='O'; if(checkWin()==='O'){ cells[i]=''; return i;} cells[i]=''; } }
+    for(let i=0;i<9;i++){ if(cells[i]===''){ cells[i]='X'; if(checkWin()==='X'){ cells[i]=''; return i;} cells[i]=''; } }
+    if(cells[4]==='') return 4;
+    const corners=[0,2,6,8].filter(i=>cells[i]==='');
+    if(corners.length) return corners[Math.floor(Math.random()*corners.length)];
+    const free=cells.map((v,i)=>v===''?i:null).filter(v=>v!==null);
+    return free[Math.floor(Math.random()*free.length)];
+}
+
+function minimaxAI(){
+    function minmax(board, player){
+        const winner = checkWinStatic(board);
+        if(winner==='O') return {score:1};
+        if(winner==='X') return {score:-1};
+        if(winner==='draw') return {score:0};
+        const moves=[];
+        for(let i=0;i<9;i++){
+            if(board[i]===''){
+                const newBoard = board.slice();
+                newBoard[i]=player;
+                const result = minmax(newBoard, player==='O'?'X':'O');
+                moves.push({index:i, score:result.score});
+            }
+        }
+        let bestMove;
+        if(player==='O'){
+            let max=-Infinity;
+            moves.forEach(m=>{ if(m.score>max){max=m.score; bestMove=m;}});
+            return bestMove;
+        } else {
+            let min=Infinity;
+            moves.forEach(m=>{ if(m.score<min){min=m.score; bestMove=m; min=m.score;}});
+            return bestMove;
+        }
+    }
+    return minmax(cells,'O').index;
+}
+
+// ====== CHECK WIN ======
+function checkWin(){
+    return checkWinStatic(cells);
+}
+function checkWinStatic(board){
+    const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    for(const w of wins){
+        const [i1,i2,i3]=w;
+        if(board[i1] && board[i1]===board[i2] && board[i1]===board[i3]) return board[i1];
+    }
+    if(board.every(c=>c)) return 'draw';
+    return null;
+}
+
+// ====== RESTART ======
+restartBtn.addEventListener('click',startGame);
+
+// ====== START ======
+startGame();
+</script>
+</body>
+</html>

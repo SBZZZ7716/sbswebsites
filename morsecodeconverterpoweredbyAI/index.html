@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-powered Morse Converter</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #fefefe;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 50px;
+  }
+  h1 {
+    font-weight: 300;
+    margin-bottom: 20px;
+  }
+  input, textarea {
+    width: 100%;
+    max-width: 500px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: #007BFF;
+    color: #fff;
+    cursor: pointer;
+    margin-bottom: 30px;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+  #output {
+    width: 100%;
+    max-width: 500px;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+  }
+  .line {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+  }
+  .letter {
+    font-weight: bold;
+  }
+  .morse {
+    font-family: monospace;
+    color: #555;
+  }
+</style>
+</head>
+<body>
+
+<h1>AI-powered Morse Converter</h1>
+
+<input type="text" id="textInput" placeholder="Type your text here...">
+<button onclick="convertToMorse()">Convert</button>
+
+<div id="output"></div>
+
+<script>
+const morseCode = {
+    "A": ".-", "B": "-...", "C": "-.-.", "D": "-..",
+    "E": ".", "F": "..-.", "G": "--.", "H": "....",
+    "I": "..", "J": ".---", "K": "-.-", "L": ".-..",
+    "M": "--", "N": "-.", "O": "---", "P": ".--.",
+    "Q": "--.-", "R": ".-.", "S": "...", "T": "-",
+    "U": "..-", "V": "...-", "W": ".--", "X": "-..-",
+    "Y": "-.--", "Z": "--..",
+    "0": "-----", "1": ".----", "2": "..---", "3": "...--",
+    "4": "....-", "5": ".....", "6": "-....", "7": "--...",
+    "8": "---..", "9": "----.",
+    " ": "/"
+};
+
+function convertToMorse() {
+    const input = document.getElementById("textInput").value.toUpperCase();
+    const outputDiv = document.getElementById("output");
+    outputDiv.innerHTML = ""; // clear previous output
+
+    if (!input) {
+        outputDiv.innerHTML = "<p>Type something to convert.</p>";
+        return;
+    }
+
+    // "AI-powered" feel: we map letters smartly and skip unknown characters
+    for (let char of input) {
+        const morse = morseCode[char] || "⍰"; // show special char if unknown
+        const line = document.createElement("div");
+        line.className = "line";
+        line.innerHTML = `<span class="letter">${char}</span> <span class="morse">${morse}</span>`;
+        outputDiv.appendChild(line);
+    }
+}
+</script>
+
+</body>
+</html>

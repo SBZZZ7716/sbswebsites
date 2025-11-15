@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Number Guessing Game — Advanced</title>
+<style>
+  :root{
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --accent:#2b8cff;
+    --success:#16a34a;
+    --muted:#6b7280;
+    --danger:#ef4444;
+    --radius:12px;
+  }
+  html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg,var(--bg),#eef2ff);
+    padding:20px;
+  }
+  .card{
+    width:100%;
+    max-width:720px;
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:0 10px 30px rgba(16,24,40,0.08);
+    padding:18px;
+  }
+  h1{margin:0 0 6px 0;font-size:1.25rem}
+  p.lead{margin:0 0 12px 0;color:var(--muted)}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  label{font-size:0.85rem;color:#374151}
+  select,input[type="number"], input[type="text"]{
+    padding:8px 10px;border-radius:8px;border:1px solid #e6e9ef;background:#fff;font-size:0.95rem;
+  }
+  .row{display:flex;gap:8px;align-items:center}
+  .main{
+    display:grid;
+    grid-template-columns: 1fr 320px;
+    gap:12px;
+  }
+  @media (max-width:860px){ .main{grid-template-columns:1fr} }
+  .play{
+    padding:12px;background:linear-gradient(180deg,#fff,#fbfdff);border-radius:10px;border:1px solid #f0f3ff;
+  }
+  .sidebar{
+    padding:12px;background:#fafafa;border-radius:10px;border:1px solid #f1f5f9;
+  }
+  .big-input{display:flex;gap:8px;margin-top:10px}
+  .big-input input{flex:1;padding:12px 14px;font-size:1.05rem;border-radius:10px}
+  button{
+    background:var(--accent);color:white;border:0;padding:10px 12px;border-radius:10px;font-weight:600;cursor:pointer;
+  }
+  .muted-btn{background:transparent;color:var(--muted);border:1px solid #e6e9ef}
+  .hint{margin-top:12px;padding:10px;border-radius:8px;background:#f8fafc;border:1px dashed #e6eefc;color:#0f172a;font-weight:600}
+  .history{margin-top:10px;max-height:220px;overflow:auto;padding:8px;background:#fff;border-radius:8px;border:1px solid #eef2ff}
+  .hist-item{display:flex;justify-content:space-between;padding:6px 8px;border-bottom:1px solid #f2f6ff;font-weight:600}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .chip{background:#fff;padding:6px 8px;border-radius:999px;border:1px solid #eef2ff;font-weight:700}
+  .success{color:var(--success);font-weight:800}
+  .danger{color:var(--danger);font-weight:800}
+  small{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="card" role="main" aria-labelledby="title">
+  <h1 id="title">Number Guessing Game — Advanced</h1>
+  <p class="lead">Pick a range and difficulty. Try to guess the secret number quickly — fewer attempts & faster time = higher score.</p>
+
+  <div class="controls" aria-hidden="false">
+    <div class="row">
+      <label for="maxNum">Range:</label>
+      <select id="maxNum" title="Upper bound of secret number">
+        <option value="50">1 – 50</option>
+        <option value="100" selected>1 – 100</option>
+        <option value="500">1 – 500</option>
+        <option value="1000">1 – 1000</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <label for="mode">Mode:</label>
+      <select id="mode" title="Unlimited or limited attempts">
+        <option value="unlimited" selected>Unlimited attempts</option>
+        <option value="limited">Limited attempts</option>
+      </select>
+      <input id="attemptLimit" type="number" min="1" value="10" style="width:92px" title="Attempts allowed when in limited mode">
+    </div>
+
+    <div class="row">
+      <button id="newGameBtn">New Game</button>
+      <button id="muteBtn" class="muted-btn">🔊 Sound</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="play" aria-live="polite">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:0.9rem;color:#374151">Enter your guess</div>
+          <div style="font-size:0.75rem;color:var(--muted)">Type a number and press Enter or tap Guess</div>
+        </div>
+        <div style="text-align:right">
+          <div class="stats">
+            <div class="chip">Time: <span id="time">0.00s</span></div>
+            <div class="chip">Attempts: <span id="attempts">0</span></div>
+            <div class="chip">Score: <span id="score">0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="big-input">
+        <input id="guessInput" type="number" placeholder="Your guess..." aria-label="Enter your guess" />
+        <button id="guessBtn">Guess</button>
+      </div>
+
+      <div id="hint" class="hint" style="display:none">Hint text</div>
+
+      <div class="history" id="history" aria-label="Guess history"></div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+        <button id="giveUp" class="muted-btn">Give Up</button>
+        <button id="reveal" class="muted-btn">Reveal Secret</button>
+        <small style="margin-left:auto;color:var(--muted)">Pro tip: press Enter to submit</small>
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <div style="font-weight:800;margin-bottom:8px">Game Info</div>
+      <div><strong>Secret number:</strong> <span id="secretLabel">—</span></div>
+      <div style="margin-top:8px"><strong>Mode:</strong> <span id="modeLabel">Unlimited</span></div>
+
+      <div style="margin-top:12px">
+        <label for="name">Player name (optional)</label>
+        <input id="name" type="text" placeholder="Your name"/>
+      </div>
+
+      <div style="margin-top:12px">
+        <button id="exportBtn" class="muted-btn">Export Results</button>
+        <small style="display:block;color:var(--muted);margin-top:6px">Download a short summary after you finish.</small>
+      </div>
+
+      <div style="margin-top:14px">
+        <div style="font-weight:700;margin-bottom:6px">Scoring</div>
+        <div style="font-size:0.9rem;color:var(--muted)">
+          Score = base (1000) − (attempts × penalty) − (time × timeFactor). Limited mode gives a bonus.
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* Number Guessing Game — Advanced
+   Features:
+   - Choose range & attempts
+   - Hints and "very close" feedback
+   - Timer + scoring
+   - Guess history + export
+   - Sound (toggle)
+*/
+
+// state
+let secret = null;
+let maxNum = 100;
+let attempts = 0;
+let attemptLimit = null;
+let mode = 'unlimited';
+let startTime = null;
+let timer = null;
+let finished = false;
+let totalScore = 0;
+let soundOn = true;
+let history = [];
+
+// elements
+const maxNumEl = document.getElementById('maxNum');
+const modeEl = document.getElementById('mode');
+const attemptLimitEl = document.getElementById('attemptLimit');
+const newGameBtn = document.getElementById('newGameBtn');
+const guessInput = document.getElementById('guessInput');
+const guessBtn = document.getElementById('guessBtn');
+const hintEl = document.getElementById('hint');
+const attemptsEl = document.getElementById('attempts');
+const timeEl = document.getElementById('time');
+const scoreEl = document.getElementById('score');
+const historyEl = document.getElementById('history');
+const secretLabel = document.getElementById('secretLabel');
+const modeLabel = document.getElementById('modeLabel');
+const muteBtn = document.getElementById('muteBtn');
+const giveUpBtn = document.getElementById('giveUp');
+const revealBtn = document.getElementById('reveal');
+const exportBtn = document.getElementById('exportBtn');
+const nameEl = document.getElementById('name');
+
+// audio (tiny beeps via WebAudio)
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function playTone(freq, dur=0.06, vol=0.06, type='sine'){
+  if(!soundOn) return;
+  if(!AudioCtx) return;
+  if(!audioCtx) audioCtx = new AudioCtx();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.value = vol;
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start();
+  o.stop(audioCtx.currentTime + dur);
+}
+
+// helpers
+function nowSeconds(){ return (performance.now() - startTime)/1000; }
+
+function randInt(max){
+  // inclusive 1..max
+  return Math.floor(Math.random()*max) + 1;
+}
+
+function formatSeconds(s){
+  return s.toFixed(2) + 's';
+}
+
+function resetTimer(){
+  if(timer) clearInterval(timer);
+  startTime = performance.now();
+  timer = setInterval(() => {
+    timeEl.textContent = formatSeconds(nowSeconds());
+  }, 80);
+}
+
+function stopTimer(){
+  if(timer) clearInterval(timer);
+  timer = null;
+}
+
+// scoring formula
+function computeScore(attemptCount, elapsed){
+  const base = 1000;
+  const attemptPenalty = 12; // per attempt
+  const timeFactor = 8; // seconds * factor
+  let sc = Math.max(0, base - (attemptCount * attemptPenalty) - Math.round(elapsed * timeFactor));
+  if(mode === 'limited') sc = Math.round(sc * 1.12); // small bonus for limited
+  return sc;
+}
+
+// UI updates
+function updateStats(){
+  attemptsEl.textContent = attempts;
+  timeEl.textContent = timer ? formatSeconds(nowSeconds()) : timeEl.textContent;
+  scoreEl.textContent = totalScore;
+  secretLabel.textContent = finished ? secret : '—';
+  modeLabel.textContent = mode === 'limited' ? `Limited (${attemptLimit} tries)` : 'Unlimited';
+}
+
+function pushHistory(guess, result){
+  history.unshift({guess, result, t: nowSeconds()});
+  renderHistory();
+}
+
+function renderHistory(){
+  historyEl.innerHTML = '';
+  history.forEach(h => {
+    const d = document.createElement('div');
+    d.className = 'hist-item';
+    d.innerHTML = `<div>#${h.guess}</div><div style="color:${h.result==='correct' ? 'var(--success)' : h.result==='close' ? '#b45309' : '#374151'}">${h.result}</div>`;
+    historyEl.appendChild(d);
+  });
+}
+
+// new game
+function newGame(){
+  maxNum = parseInt(maxNumEl.value,10) || 100;
+  mode = modeEl.value;
+  attemptLimit = mode === 'limited' ? Math.max(1, parseInt(attemptLimitEl.value,10) || 10) : null;
+  secret = randInt(maxNum);
+  attempts = 0;
+  finished = false;
+  history = [];
+  totalScore = 0;
+  hintEl.style.display = 'none';
+  guessInput.value = '';
+  guessInput.disabled = false;
+  resetTimer();
+  updateStats();
+  renderHistory();
+  playTone(700,0.06,0.04);
+  // ensure audio context is resumed on first interaction
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// guess handler
+function handleGuess(raw){
+  if(finished) return;
+  const v = Number(raw);
+  if(!Number.isFinite(v) || v < 1 || v > maxNum){
+    hintEl.style.display = 'block';
+    hintEl.textContent = `Enter a whole number between 1 and ${maxNum}.`;
+    playTone(220,0.06,0.06,'sawtooth');
+    return;
+  }
+
+  attempts++;
+  updateStats();
+
+  // compute closeness
+  const diff = Math.abs(v - secret);
+  let result = '';
+  if(diff === 0){
+    result = 'correct';
+  } else if(diff <= Math.max(1, Math.floor(maxNum * 0.02))) {
+    result = 'very close';
+  } else if(diff <= Math.max(2, Math.floor(maxNum * 0.05))) {
+    result = 'close';
+  } else {
+    result = v > secret ? 'too high' : 'too low';
+  }
+
+  // show hint
+  hintEl.style.display = 'block';
+  if(result === 'correct'){
+    const elapsed = nowSeconds();
+    const sc = computeScore(attempts, elapsed);
+    totalScore += sc;
+    hintEl.innerHTML = `<span class="success">🎉 Correct! The number was ${secret}. Score +${sc}.</span>`;
+    playTone(1200,0.14,0.12,'triangle');
+    finished = true;
+    stopTimer();
+    guessInput.disabled = true;
+    pushHistory(v, 'correct');
+  } else if(result === 'very close'){
+    hintEl.innerHTML = `🔥 Very close — ${v > secret ? 'a bit high' : 'a bit low'}.`;
+    playTone(880,0.06,0.06,'sine');
+    pushHistory(v, 'very close');
+  } else if(result === 'close'){
+    hintEl.innerHTML = `👍 Close — ${v > secret ? 'high' : 'low'}.`;
+    playTone(660,0.06,0.06,'sine');
+    pushHistory(v, 'close');
+  } else {
+    hintEl.innerHTML = `${v > secret ? 'Too high' : 'Too low'}.`;
+    playTone(440,0.05,0.04,'sine');
+    pushHistory(v, v > secret ? 'too high' : 'too low');
+  }
+
+  updateStats();
+
+  // check attempt limit
+  if(mode === 'limited' && attempts >= attemptLimit && !finished){
+    finished = true;
+    stopTimer();
+    hintEl.innerHTML += ` <span class="danger">Out of attempts — the number was ${secret}.</span>`;
+    playTone(150,0.2,0.12,'sawtooth');
+    guessInput.disabled = true;
+  }
+
+  guessInput.value = '';
+  guessInput.focus();
+}
+
+// events
+guessBtn.addEventListener('click', ()=> handleGuess(guessInput.value));
+guessInput.addEventListener('keydown', (e)=> { if(e.key === 'Enter') handleGuess(guessInput.value); });
+
+newGameBtn.addEventListener('click', newGame);
+
+modeEl.addEventListener('change', ()=> {
+  const v = modeEl.value;
+  attemptLimitEl.disabled = (v !== 'limited');
+  mode = v;
+  updateStats();
+});
+
+muteBtn.addEventListener('click', ()=>{
+  soundOn = !soundOn;
+  muteBtn.textContent = soundOn ? '🔊 Sound' : '🔈 Muted';
+});
+
+// give up & reveal
+giveUpBtn.addEventListener('click', ()=>{
+  if(finished) return;
+  if(!confirm('Give up? This will end the current round and reveal the secret.')) return;
+  finished = true;
+  stopTimer();
+  hintEl.style.display = 'block';
+  hintEl.innerHTML = `<span class="danger">You gave up. The number was ${secret}.</span>`;
+  secretLabel.textContent = secret;
+  guessInput.disabled = true;
+});
+
+revealBtn.addEventListener('click', ()=>{
+  alert('The secret number is: ' + secret);
+});
+
+// export
+exportBtn.addEventListener('click', ()=>{
+  const data = {
+    player: nameEl.value || 'Player',
+    secret,
+    attempts,
+    time: nowSeconds(),
+    score: totalScore,
+    history
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'guessing-game-results.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// quick init
+newGame();
+updateStats();
+
+</script>
+</body>
+</html>

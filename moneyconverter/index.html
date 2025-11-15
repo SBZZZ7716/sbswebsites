@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Currency Converter</title>
+<style>
+body {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    font-family:'Arial',sans-serif;
+    background: linear-gradient(135deg,#cfd9df,#e2ebf0);
+    min-height:100vh;
+    margin:0;
+    padding:20px;
+}
+h1 { margin-bottom:20px; color:#333; text-shadow:1px 1px 2px #fff; }
+input, select { padding:10px; font-size:16px; border-radius:8px; margin:5px; }
+button { padding:8px 14px; font-size:16px; border-radius:8px; cursor:pointer; margin-top:10px; }
+#result { margin-top:15px; font-size:18px; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<h1>Currency Converter</h1>
+
+<input type="number" id="amount" placeholder="Amount" value="1" min="0">
+<select id="fromCurrency">
+    <option value="USD">USD</option>
+    <option value="EUR">EUR</option>
+    <option value="GBP">GBP</option>
+    <option value="JPY">JPY</option>
+</select>
+<select id="toCurrency">
+    <option value="USD">USD</option>
+    <option value="EUR" selected>EUR</option>
+    <option value="GBP">GBP</option>
+    <option value="JPY">JPY</option>
+</select>
+<button id="convert">Convert</button>
+
+<div id="result">Converted amount: 0</div>
+
+<script>
+// Sample static exchange rates (base USD)
+const rates = {
+    USD: 1,
+    EUR: 0.93,
+    GBP: 0.81,
+    JPY: 141
+};
+
+const amountEl = document.getElementById('amount');
+const fromEl = document.getElementById('fromCurrency');
+const toEl = document.getElementById('toCurrency');
+const convertBtn = document.getElementById('convert');
+const resultEl = document.getElementById('result');
+
+function convertCurrency(){
+    const amount = parseFloat(amountEl.value);
+    const from = fromEl.value;
+    const to = toEl.value;
+    if(isNaN(amount)) { resultEl.textContent='Enter a valid amount'; return; }
+    const converted = (amount / rates[from]) * rates[to];
+    resultEl.textContent = `Converted amount: ${converted.toFixed(2)} ${to}`;
+}
+
+convertBtn.addEventListener('click',convertCurrency);
+</script>
+
+</body>
+</html>

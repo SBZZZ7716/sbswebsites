@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fun Tools Hub</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#fefefe; color:#333; padding:30px; display:flex; flex-direction:column; align-items:center; }
+  h1 { font-weight:300; margin-bottom:30px; text-align:center; }
+  .tool { border:1px solid #ddd; border-radius:8px; padding:20px; margin-bottom:30px; width:100%; max-width:500px; box-shadow:0 2px 6px rgba(0,0,0,0.05); }
+  h2 { font-weight:400; margin-bottom:15px; }
+  input, select, button { padding:10px; margin:5px 0; width:100%; font-size:16px; border-radius:6px; border:1px solid #ccc; }
+  button { cursor:pointer; background:#007BFF; color:#fff; border:none; }
+  button:hover { background:#0056b3; }
+  #unitResult, #emojiResult, #quoteResult, #motivationResult { margin-top:15px; font-weight:bold; font-size:16px; }
+</style>
+</head>
+<body>
+
+<h1>Fun Tools Hub</h1>
+
+<!-- Unit Converter -->
+<div class="tool">
+  <h2>Unit Converter</h2>
+  <input type="number" id="unitValue" placeholder="Enter value">
+  <select id="unitFrom">
+    <option value="meters">Meters</option>
+    <option value="feet">Feet</option>
+    <option value="celsius">Celsius</option>
+    <option value="fahrenheit">Fahrenheit</option>
+    <option value="kg">Kilograms</option>
+    <option value="lbs">Pounds</option>
+  </select>
+  <select id="unitTo">
+    <option value="meters">Meters</option>
+    <option value="feet">Feet</option>
+    <option value="celsius">Celsius</option>
+    <option value="fahrenheit">Fahrenheit</option>
+    <option value="kg">Kilograms</option>
+    <option value="lbs">Pounds</option>
+  </select>
+  <button onclick="convertUnit()">Convert</button>
+  <div id="unitResult"></div>
+</div>
+
+<!-- Random Quote Generator -->
+<div class="tool">
+  <h2>Random Quote Generator</h2>
+  <button onclick="generateQuote()">Get Random Quote</button>
+  <div id="quoteResult"></div>
+</div>
+
+<!-- Random Motivation Generator -->
+<div class="tool">
+  <h2>Random Motivation Generator</h2>
+  <button onclick="generateMotivation()">Get Motivation</button>
+  <div id="motivationResult"></div>
+</div>
+
+<script>
+/* Unit Converter */
+function convertUnit() {
+  const val = parseFloat(document.getElementById("unitValue").value);
+  const from = document.getElementById("unitFrom").value;
+  const to = document.getElementById("unitTo").value;
+  if(isNaN(val)) { document.getElementById("unitResult").innerText="Enter a valid number"; return; }
+  let res = val;
+  if(from==='meters' && to==='feet') res=val*3.28084;
+  else if(from==='feet' && to==='meters') res=val/3.28084;
+  else if(from==='celsius' && to==='fahrenheit') res=val*9/5+32;
+  else if(from==='fahrenheit' && to==='celsius') res=(val-32)*5/9;
+  else if(from==='kg' && to==='lbs') res=val*2.20462;
+  else if(from==='lbs' && to==='kg') res=val/2.20462;
+  document.getElementById("unitResult").innerText=`${val} ${from} = ${res.toFixed(2)} ${to}`;
+}
+
+/* Random Quote Generator */
+const quotes = [
+  "“The best way to predict the future is to invent it.” – Alan Kay",
+  "“Life is what happens when you're busy making other plans.” – John Lennon",
+  "“Do not wait to strike till the iron is hot; but make it hot by striking.” – William Butler Yeats",
+  "“Success is not in what you have, but who you are.” – Bo Bennett",
+  "“Your time is limited, so don’t waste it living someone else’s life.” – Steve Jobs"
+];
+
+function generateQuote() {
+  const quote = quotes[Math.floor(Math.random()*quotes.length)];
+  document.getElementById("quoteResult").innerText = quote;
+}
+
+/* Random Motivation Generator */
+const motivations = [
+  "You can do it!",
+  "Keep pushing forward!",
+  "Every step counts!",
+  "Believe in yourself!",
+  "Your effort will pay off!"
+];
+
+function generateMotivation() {
+  const mot = motivations[Math.floor(Math.random()*motivations.length)];
+  document.getElementById("motivationResult").innerText = mot;
+}
+</script>
+
+</body>
+</html>

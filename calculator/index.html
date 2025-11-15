@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minimal Calculator and Drawing Pad</title>
+<style>
+       body {
+           background-color: black;
+           color: white;
+           font-family: Arial, sans-serif;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           padding: 20px;
+       }
+       .calculator, .drawing-pad {
+           margin-top: 20px;
+           background-color: #333;
+           padding: 20px;
+           border-radius: 10px;
+       }
+       .calculator input {
+           width: 100%;
+           height: 40px;
+           margin-bottom: 10px;
+           text-align: right;
+           font-size: 1.5em;
+           border: none;
+           border-radius: 5px;
+       }
+       .calculator .buttons {
+           display: grid;
+           grid-template-columns: repeat(4, 1fr);
+           gap: 10px;
+       }
+       .calculator button {
+           padding: 15px;
+           font-size: 1.2em;
+           border: none;
+           border-radius: 5px;
+           background-color: #555;
+           color: white;
+           cursor: pointer;
+       }
+       .calculator button:hover {
+           background-color: #777;
+       }
+       canvas {
+           border: 2px solid white;
+           border-radius: 10px;
+           margin-top: 20px;
+       }
+</style>
+</head>
+<body>
+<div class="calculator">
+<input type="text" id="display" disabled>
+<div class="buttons">
+<button>7</button><button>8</button><button>9</button><button>+</button>
+<button>4</button><button>5</button><button>6</button><button>-</button>
+<button>1</button><button>2</button><button>3</button><button>*</button>
+<button>0</button><button>.</button><button>=</button><button>/</button>
+</div>
+</div>
+<canvas class="drawing-pad" id="drawingPad" width="300" height="300"></canvas>
+<script>
+       const display = document.getElementById('display');
+       const buttons = document.querySelectorAll('.calculator button');
+       let currentInput = '';
+       buttons.forEach(button => {
+           button.addEventListener('click', () => {
+               const value = button.textContent;
+               if (value === '=') {
+                   try {
+                       currentInput = eval(currentInput).toString();
+                   } catch (e) {
+                       currentInput = 'Error';
+                   }
+               } else if (value === 'C') {
+                   currentInput = '';
+               } else {
+                   currentInput += value;
+               }
+               display.value = currentInput;
+           });
+       });
+       const canvas = document.getElementById('drawingPad');
+       const ctx = canvas.getContext('2d');
+       let drawing = false;
+       canvas.addEventListener('mousedown', (e) => {
+           drawing = true;
+           ctx.beginPath();
+           ctx.moveTo(e.offsetX, e.offsetY);
+       });
+       canvas.addEventListener('mousemove', (e) => {
+           if (drawing) {
+               ctx.lineTo(e.offsetX, e.offsetY);
+               ctx.strokeStyle = 'white';
+               ctx.lineWidth = 2;
+               ctx.stroke();
+           }
+       });
+       canvas.addEventListener('mouseup', () => {
+           drawing = false;
+       });
+       canvas.addEventListener('mouseleave', () => {
+           drawing = false;
+       });
+</script>
+</body>
+</html>

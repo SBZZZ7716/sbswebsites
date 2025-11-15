@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Reaction Speed Game</title>
+<style>
+
+        body {
+
+            text-align: center;
+
+            font-family: Arial;
+
+            margin-top: 50px;
+
+        }
+
+        #box {
+
+            width: 200px;
+
+            height: 200px;
+
+            background: red;
+
+            margin: 50px auto;
+
+            display: none;
+
+            cursor: pointer;
+
+        }
+
+        #message {
+
+            font-size: 24px;
+
+            margin-top: 20px;
+
+        }
+</style>
+</head>
+<body>
+<h1>Reaction Speed Game</h1>
+<p>Click the red box as fast as you can when it appears!</p>
+<div id="box"></div>
+<div id="message"></div>
+<!-- Add a sound effect -->
+<audio id="sound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+<script>
+
+let startTime, endTime;
+
+const box = document.getElementById("box");
+
+const message = document.getElementById("message");
+
+const sound = document.getElementById("sound");
+
+function showBox() {
+
+    const delay = Math.random() * 3000 + 1000; // 1-4 seconds
+
+    setTimeout(() => {
+
+        box.style.display = "block";
+
+        startTime = Date.now();
+
+        sound.play(); // Play sound when box appears
+
+    }, delay);
+
+}
+
+box.onclick = function() {
+
+    endTime = Date.now();
+
+    const reaction = ((endTime - startTime) / 1000).toFixed(3);
+
+    message.innerText = "Your reaction time: " + reaction + " seconds!";
+
+    box.style.display = "none";
+
+    showBox();
+
+};
+
+showBox();
+</script>
+</body>
+</html>
+ 

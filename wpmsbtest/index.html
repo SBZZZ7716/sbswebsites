@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Typing Speed Test</title>
+<style>
+body {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    font-family:'Arial',sans-serif;
+    background: linear-gradient(135deg,#ffecd2,#fcb69f);
+    min-height:100vh;
+    margin:0;
+    padding:20px;
+}
+h1 { color:#333; margin-bottom:20px; text-shadow:1px 1px 2px #fff; }
+#textDisplay {
+    background:#fff; padding:20px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1);
+    max-width:600px; margin-bottom:20px; font-size:18px; line-height:1.5;
+}
+.correct { color:green; }
+.incorrect { color:red; }
+#inputArea, #customText {
+    width:600px; max-width:90%; padding:10px; font-size:18px; border-radius:8px; border:2px solid #ccc; margin-bottom:10px;
+}
+#stats { margin-top:15px; font-size:18px; }
+button { margin-top:10px; padding:8px 14px; font-size:16px; cursor:pointer; border-radius:8px; }
+</style>
+</head>
+<body>
+
+<h1>Typing Speed Test</h1>
+
+<textarea id="customText" rows="4" placeholder="Enter your own text here...">Typing speed tests are a fun way to improve your typing skills. Practice regularly to get faster and more accurate.</textarea>
+<button id="loadText">Load Text</button>
+
+<div id="textDisplay"></div>
+<input type="text" id="inputArea" placeholder="Start typing here..." autofocus>
+<div id="stats">Time: <span id="time">60</span>s | WPM: <span id="wpm">0</span> | Errors: <span id="errors">0</span></div>
+<button id="restart">Restart Test</button>
+
+<script>
+const textDisplay = document.getElementById('textDisplay');
+const inputArea = document.getElementById('inputArea');
+const timeEl = document.getElementById('time');
+const wpmEl = document.getElementById('wpm');
+const errorsEl = document.getElementById('errors');
+const restartBtn = document.getElementById('restart');
+const loadTextBtn = document.getElementById('loadText');
+const customText = document.getElementById('customText');
+
+let text = customText.value;
+let timer = 60;
+let interval = null;
+let started = false;
+let errors = 0;
+let startTime = null;
+
+// ====== Display Text ======
+function displayText(){
+    textDisplay.innerHTML = '';
+    text.split('').forEach(char => {
+        const span = document.createElement('span');
+        span.textContent = char;
+        textDisplay.appendChild(span);
+    });
+}
+
+// ====== Start Timer ======
+function startTimer() {
+    if(started) return;
+    started = true;
+    startTime = new Date();
+    interval = setInterval(() => {
+        const elapsed = Math.floor((new Date() - startTime)/1000);
+        const remaining = Math.max(60 - elapsed, 0);
+        timeEl.textContent = remaining;
+        if(remaining <= 0){
+            endTest();
+        }
+    },1000);
+}
+
+// ====== Calculate WPM ======
+function calculateWPM(){
+    const wordsTyped = inputArea.value.trim().split(/\s+/).length;
+    const elapsedSeconds = (new Date() - startTime)/1000;
+    const wpm = Math.round(wordsTyped * 60 / (elapsedSeconds || 1));
+    wpmEl.textContent = wpm;
+}
+
+// ====== End Test ======
+function endTest(){
+    clearInterval(interval);
+    inputArea.disabled = true;
+    started = false;
+    calculateWPM();
+}
+
+// ====== Reset Test ======
+function resetTest(){
+    clearInterval(interval);
+    timer = 60;
+    timeEl.textContent = timer;
+    inputArea.value = '';
+    inputArea.disabled = false;
+    started = false;
+    errors = 0;
+    errorsEl.textContent = errors;
+    wpmEl.textContent = 0;
+    startTime = null;
+    displayText();
+}
+
+// ====== Input Handling ======
+inputArea.addEventListener('input', ()=>{
+    startTimer();
+    const input = inputArea.value;
+    const spans = textDisplay.querySelectorAll('span');
+    errors = 0;
+    let allCorrect = true;
+
+    spans.forEach((span, idx)=>{
+        const char = input[idx];
+        if(char == null){
+            span.className = '';
+            allCorrect = false;
+        } else if(char === span.textContent){
+            span.className = 'correct';
+        } else {
+            span.className = 'incorrect';
+            errors++;
+            allCorrect = false;
+        }
+    });
+
+    errorsEl.textContent = errors;
+    calculateWPM();
+
+    if(allCorrect && input.length === text.length){
+        endTest();
+    }
+});
+
+// ====== Load Custom Text ======
+loadTextBtn.addEventListener('click', ()=>{
+    text = customText.value || "Type some text here...";
+    resetTest();
+});
+
+// ====== Restart Button ======
+restartBtn.addEventListener('click', resetTest);
+
+// ====== Initialize ======
+displayText();
+</script>
+
+</body>
+</html>
